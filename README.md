@@ -38,7 +38,7 @@ elastic certification guide
 
 - 텍스트들을 변환하고 분리하는 과정을 거친다.
 
-***.keyword ⇒ 분석(analyze)하지 않고 원본 문자열 그대로 저장하는 keyword 타입 필드*** 
+***. keyword ⇒ 분석을 하지 않고 텍스트 그대로 유지하라는 키워드*** 
 
 ### 1.1 Elasticsearch 작동 방식 (INTRO)
 
@@ -272,3 +272,119 @@ GET blogs/_search
 - .keyword 가 붙은 경우는 엘라스틱서치가 분석을 진행하지 않는다.
 - 따라서 저장된 first_name은 “Steve” 인데 넘겨준 데이터는 분석을 하지 않기 때문에 일치하는 값이 없다.
     - 따라서 result 값은 0이 나온다.
+
+1. Using they `keyword` field, update the query to get the same blogs as the first query.
+
+```jsx
+GET blogs/_search
+{
+  "query": {
+    "match": {
+      "authors.first_name.keyword": "Steve"
+    }
+  }
+}
+```
+
+### 2.2 Overview of mappings
+
+1. Index the following sample document, which also creates a new index called `sample_blog`:
+
+```jsx
+POST sample_blog/_doc
+{
+  "@timestamp": "2021-03-10T16:00:00.000Z",
+  "abstract": "The Joy of Painting",
+  "author": "Bob Ross",
+  "body": "Painting should do one thing. It should put happiness in your heart. We'll take a little bit of Van Dyke Brown. Isn't that fantastic? You can just push a little tree out of your brush like that. Mix your color marbly don't mix it dead.",
+  "body_word_count": 55,
+  "category": "Painting",
+  "title": "Making Happy Little Trees",
+  "utl": "/blog/happy-little-trees",
+  "published": true
+}
+
+```
+
+1. View the default mappings that were created. Elasticsearch did its best to guess the data types - but notice a lot of the fields are of type `text` and `keyword`:
+
+```jsx
+GET sample_blog/_mapping
+```
+
+- sample_blog의 인덱스의 필드 구조와 타입을 보여달라는 명령어
+
+```jsx
+{
+  "sample_blog" : {
+    "mappings" : {
+      "properties" : {
+        "@timestamp" : {
+          "type" : "date"
+        },
+        "abstract" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "type" : "keyword",
+              "ignore_above" : 256
+            }
+          }
+        },
+        "author" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "type" : "keyword",
+              "ignore_above" : 256
+            }
+          }
+        },
+        "body" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "type" : "keyword",
+              "ignore_above" : 256
+            }
+          }
+        },
+        "body_word_count" : {
+          "type" : "long"
+        },
+        "category" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "type" : "keyword",
+              "ignore_above" : 256
+            }
+          }
+        },
+        "published" : {
+          "type" : "boolean"
+        },
+        "title" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "type" : "keyword",
+              "ignore_above" : 256
+            }
+          }
+        },
+        "utl" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "type" : "keyword",
+              "ignore_above" : 256
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+```

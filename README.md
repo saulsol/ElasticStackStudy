@@ -388,3 +388,709 @@ GET sample_blog/_mapping
 }
 
 ```
+
+1. Create a new index called `test_blogs` based on the `sample_blog` mapping. Configure `test_blogs` to satisfy the following requirements:
+- `@timestamp` is a `date`
+- `body_word_count` is an integer
+- the `abstract`, `body`, and `title` fields are of type `text` only
+- the `author`, `category` and `url` fields are of type `keyword` only
+- `published` is of type `boolean`
+
+```jsx
+PUT test_blogs
+{
+  "mappings": {
+    "properties": {
+      "@timestamp" : {
+        "type" : "date"
+      },
+      "abstract" : {
+        "type" : "text"
+      },
+      "author": {
+        "type": "keyword"
+      },
+      "body": {
+        "type": "text"
+      },
+      "body_word_count" : {
+        "type": "integer"
+      },
+      "category" : {
+        "type": "keyword"
+      },
+      "published" : {
+        "type": "boolean"
+      },
+      "title" : {
+        "type": "text"
+      }, 
+      "utl" : {
+        "type" : "boolean"
+      }
+    }
+  }
+}
+```
+
+1. Index the document from step 1 into your new `test_blogs` index. The document should be indexed without any issues with the mapping or data types.
+
+```jsx
+POST test_blogs/_doc
+{
+  "@timestamp": "2021-03-10T16:00:00.000Z",
+  "abstract": "The Joy of Painting",
+  "author": "Bob Ross",
+  "body": "Painting should do one thing. It should put happiness in your heart. We'll take a little bit of Van Dyke Brown. Isn't that fantastic? You can just push a little tree out of your brush like that. Mix your color marbly don't mix it dead.",
+  "body_word_count": 55,
+  "category": "Painting",
+  "title": "Making Happy Little Trees",
+  "utl": "/blog/happy-little-trees",
+  "published": "true"
+}
+
+```
+
+1. Now let's make some changes to the `blogs` index. First, create a new `blogs_fixed` index.
+
+```jsx
+PUT blogs_fixed
+```
+
+1. Reindex all of the documents from the `blogs` index into your new `blogs_fixed` index.
+
+```jsx
+PUT blogs_fixed/_mapping
+{
+  "_meta": {
+    "created_by": "Elastic Student"
+  },
+  "properties": {
+    "authors": {
+      "properties": {
+        "company": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "first_name": {
+          "type": "keyword"
+        },
+        "full_name": {
+          "type": "text"
+        },
+        "job_title": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "last_name": {
+          "type": "keyword"
+        },
+        "uid": {
+          "type": "keyword"
+        }
+      }
+    },
+    "category": {
+      "type": "keyword"
+    },
+    "content": {
+      "type": "text"
+    },
+    "locale": {
+      "type": "keyword"
+    },
+    "publish_date": {
+      "type": "date",
+      "format": "iso8601"
+    },
+    "tags": {
+      "properties": {
+        "elastic_stack": {
+          "type": "keyword"
+        },
+        "industry": {
+          "type": "keyword"
+        },
+        "level": {
+          "type": "keyword"
+        },
+        "product": {
+          "type": "keyword"
+        },
+        "tags": {
+          "type": "keyword"
+        },
+        "topic": {
+          "type": "keyword"
+        },
+        "use_case": {
+          "type": "keyword"
+        },
+        "use_cases": {
+          "type": "keyword"
+        }
+      }
+    },
+    "title": {
+      "type": "text"
+    },
+    "url": {
+      "type": "keyword"
+    }
+  }
+}
+
+POST _reindex
+{
+  "source": {
+    "index": "blogs"
+  }, 
+  "dest": {
+    "index": "blogs_fixed"
+  }
+}
+```
+
+- The reindex request will take a few moments, but should run fairly quickly. If it times out, do not panic and *do not run the reindex command again*.
+- It just means it took more than 1 minute, and Console stopped waiting for the response. The request will continue to run in the background though.
+- 기존 인덱스를 기반으로 다른 인덱스에 문서를 저장하는 명령어를 위와같이 사용한다.
+
+1. Run the following command to see how many documents are in `blogs_fixed`. You will know the reindexing is complete when `blogs_fixed` has 4,719 documents.
+
+```jsx
+GET blogs_fixed/_count
+```
+
+1. Run the previous query for "security analytics" on the original `blogs` index. You should get 598 hits. Why are there so many more hits?
+
+```jsx
+GET blogs/_search
+{
+  "query": {
+    "match": {
+      "tags.use_case": "security analytics"
+    }
+  }
+}
+
+hits -> 216
+
+GET blogs_fixed/_search
+{
+  "query": {
+    "match": {
+      "tags.use_case": "security analytics"
+    }
+  }
+}
+
+hits -> 598
+```
+
+- 왜 새로 생성된 인덱스는 다른 결과를 나타낼까?
+- blogs 인덱스의 tags.use_case 같은 경우
+
+```jsx
+"use_cases" : {
+              "type" : "text",
+              "fields" : {
+                "keyword" : {
+                  "type" : "keyword",
+                  "ignore_above" : 256
+                }
+              }
+```
+
+- blog_fixed 인덱스의 tags.use_case 같은 경우
+
+```jsx
+"use_case" : {
+              "type" : "keyword"
+            },
+```
+
+- blogs 인덱스의 tags.use_case가 잘못 설계되었다고 생각할 수 있지만 저런 식으로 하나의 필드에 여러 인덱싱 방식을 적용할 수 있다.
+
+```jsx
+{
+  "title": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword"
+      }
+    }
+  }
+}
+```
+
+title
+title.keyword
+
+- 이렇게 두 개의 필드가 생기고 두 필드의 용도는 다르다.
+
+| 필드 | 용도 |
+| --- | --- |
+| title | full-text search |
+| title.keyword | 정렬 / aggregation |
+
+### 2.3 Text analysis
+
+1. Elasticsearch provides an `_analyze` API. For example, to see what would happen to the string `"United Kingdom"` if you applied the `standard` analyzer, you can use the following in Console:
+
+```jsx
+GET _analyze
+{
+  "text": "United Kingdom",
+  "analyzer": "standard"
+}
+```
+
+response 
+
+```jsx
+{
+  "tokens" : [
+    {
+      "token" : "united",
+      "start_offset" : 0,
+      "end_offset" : 6,
+      "type" : "<ALPHANUM>",
+      "position" : 0
+    },
+    {
+      "token" : "kingdom",
+      "start_offset" : 7,
+      "end_offset" : 14,
+      "type" : "<ALPHANUM>",
+      "position" : 1
+    }
+  ]
+}
+```
+
+- 분석을 진행한 경우 대문자는 소문자로 변환되는 것을 확인할 수 있다.
+- 그리고 띄어쓰기 단위로 잘라진 것을 확인할 수 있다.
+
+1. Let's take a closer look at analyzers. Compare the output of the `_analyze` API on the string `"Nodes and Shards"` using the `standard` analyzer and using the `english` analyzer.
+
+```jsx
+GET _analyze
+{
+  "text": "Nodes and Shards",
+  "analyzer": "standard"
+}
+
+---- response ----
+{
+  "tokens" : [
+    {
+      "token" : "nodes",
+      "start_offset" : 0,
+      "end_offset" : 5,
+      "type" : "<ALPHANUM>",
+      "position" : 0
+    },
+    {
+      "token" : "and",
+      "start_offset" : 6,
+      "end_offset" : 9,
+      "type" : "<ALPHANUM>",
+      "position" : 1
+    },
+    {
+      "token" : "shards",
+      "start_offset" : 10,
+      "end_offset" : 16,
+      "type" : "<ALPHANUM>",
+      "position" : 2
+    }
+  ]
+}
+
+GET _analyze
+{
+  "text": "Nodes and Shards",
+  "analyzer": "english"
+}
+
+---- response ----
+{
+  "tokens" : [
+    {
+      "token" : "node",
+      "start_offset" : 0,
+      "end_offset" : 5,
+      "type" : "<ALPHANUM>",
+      "position" : 0
+    },
+    {
+      "token" : "shard",
+      "start_offset" : 10,
+      "end_offset" : 16,
+      "type" : "<ALPHANUM>",
+      "position" : 2
+    }
+  ]
+}
+
+```
+
+- 각 analyzer 마다 텍스트를 분석하는 것이 다릅니다.
+    - stopword 삭제 여부
+    - 소문자 변환 수행
+
+<stop word?>
+
+```jsx
+and
+the
+a
+is
+in
+of
+```
+
+- 의미 전달에 크게 기여하지 않는 단어
+
+1. Using the `_analyze` API, see what the `standard` analyzer does with the following HTML snippet:
+
+```jsx
+GET _analyze
+{
+  "analyzer": "standard",
+  "text":     "<b>Is</b> this <a href='/blogs'>clean</a> text?"
+}
+```
+
+```jsx
+{
+  "tokens" : [
+    {
+      "token" : "b",
+      "start_offset" : 1,
+      "end_offset" : 2,
+      "type" : "<ALPHANUM>",
+      "position" : 0
+    },
+    {
+      "token" : "b",
+      "start_offset" : 7,
+      "end_offset" : 8,
+      "type" : "<ALPHANUM>",
+      "position" : 2
+    },
+    {
+      "token" : "href",
+      "start_offset" : 18,
+      "end_offset" : 22,
+      "type" : "<ALPHANUM>",
+      "position" : 5
+    },
+    {
+      "token" : "blog",
+      "start_offset" : 25,
+      "end_offset" : 30,
+      "type" : "<ALPHANUM>",
+      "position" : 6
+    },
+    {
+      "token" : "clean",
+      "start_offset" : 32,
+      "end_offset" : 37,
+      "type" : "<ALPHANUM>",
+      "position" : 7
+    },
+    {
+      "token" : "text",
+      "start_offset" : 42,
+      "end_offset" : 46,
+      "type" : "<ALPHANUM>",
+      "position" : 9
+    }
+  ]
+}
+```
+
+- HTML 태그도 일반 텍스트처럼 인덱싱됨.
+- elastic search는 기본적으로 HTML을 이해하지 못합니다.
+
+1. **EXAM PREP:** The `html_strip` character filter strips out HTML code before indexing the data. As a result, you will have cleaner data to search against. To use this filter, you need to create a custom analyzer. Create a new index named `blogs_test` that defines an `analyzer` named `content_analyzer` that uses:
+- the `html_strip` character filter
+- the `standard` tokenizer
+- the `lowercase` filter
+
+- 따라서 custom analyzer를 만들어서 문제를 해결하는 방식으로 진행할 수 있다.
+
+```jsx
+PUT blogs_test
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "content_analyzer" : {
+          "tokenizer" : "standard",
+          "filter" : ["lowercase"],
+          "char_filter" : ["html_strip"]
+        }
+      }
+    }
+  }
+}
+```
+
+- blogs_test라는 인덱스에 “content_analyzer” 라는 analyzer 를 생성.
+
+```jsx
+GET blogs_test/_analyze
+{
+  "text": "<b>Is</b> this <a href='/blogs'>clean</a> text?",
+  "analyzer": "content_analyzer"
+}
+```
+
+```jsx
+{
+  "tokens" : [
+    {
+      "token" : "is",
+      "start_offset" : 3,
+      "end_offset" : 9,
+      "type" : "<ALPHANUM>",
+      "position" : 0
+    },
+    {
+      "token" : "this",
+      "start_offset" : 10,
+      "end_offset" : 14,
+      "type" : "<ALPHANUM>",
+      "position" : 1
+    },
+    {
+      "token" : "clean",
+      "start_offset" : 32,
+      "end_offset" : 41,
+      "type" : "<ALPHANUM>",
+      "position" : 2
+    },
+    {
+      "token" : "text",
+      "start_offset" : 42,
+      "end_offset" : 46,
+      "type" : "<ALPHANUM>",
+      "position" : 3
+    }
+  ]
+}
+```
+
+### 2.4 Types and parameters
+
+1. In the previous lab, you changed the `tags` fields (`tags.elastic_stack`, `tags.industry`, `tags.level`, etc.) into `keyword` fields. Querying all these separate fields is possible, but not optimal. Let's copy all the individual `tags` fields into one `search_tags` field that can be queried with a simple `match` query. At the same time, let's also apply the `content_analyzer` to the `content` field.
+    - create a new index named `blogs_fixed2`. Use the mapping and settings of `blogs_fixed` as the starting point
+    - add a new `keyword` field to the `blogs_fixed2` mapping named `search_tags`
+    - using `copy_to`, copy the values of all the `tags` to `search_tags`
+    - disable doc values for the new `search_tags` field (it will not be used for sorting or aggregations)
+    - completely disable the `authors.uid` field
+    - apply the custom `content_analyzer` from lab 2.3 to the `content` field (don't forget that the analyzer needs to be defined in the settings!)
+
+```jsx
+PUT blogs_fixed2
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "content_analyzer": {
+          "tokenizer": "standard",
+          "filter": ["lowercase"],
+          "char_filter": ["html_strip"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "_meta": {
+      "created_by": "Elastic Student"
+    },
+    "properties": {
+      "authors": {
+        "properties": {
+          "company": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          },
+          "first_name": {
+            "type": "keyword"
+          },
+          "full_name": {
+            "type": "text"
+          },
+          "job_title": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          },
+          "last_name": {
+            "type": "keyword"
+          },
+          "uid": {
+            "enabled": false
+          }
+        }
+      },
+      "category": {
+        "type": "keyword"
+      },
+      "content": {
+        "type": "text",
+        "analyzer": "content_analyzer"
+      },
+      "locale": {
+        "type": "keyword"
+      },
+      "publish_date": {
+        "type": "date",
+        "format": "iso8601"
+      },
+      "search_tags": {
+        "type": "keyword",
+        "doc_values": false
+      },
+      "tags": {
+        "properties": {
+          "elastic_stack": {
+            "type": "keyword",
+            **"copy_to": "search_tags"  -- ! --**
+          },
+          "industry": {
+            "type": "keyword",
+            **"copy_to": "search_tags"  -- ! --**
+          },
+          "level": {
+            "type": "keyword",
+            **"copy_to": "search_tags"  -- ! --**
+          },
+          "product": {
+            "type": "keyword",
+            **"copy_to": "search_tags"  -- ! --**
+          },
+          "tags": {
+            "type": "keyword",
+            **"copy_to": "search_tags"  -- ! --**
+          },
+          "topic": {
+            "type": "keyword",
+            **"copy_to": "search_tags"  -- ! --**
+          },
+          "use_case": {
+            "type": "keyword",
+            **"copy_to": "search_tags"  -- ! --** 
+          },
+          "use_cases": {
+            "type": "keyword",
+            **"copy_to": "search_tags"  -- ! --** 
+          }
+        }
+      },
+      "title": {
+        "type": "text"
+      },
+      "url": {
+        "type": "keyword"
+      }
+    }
+  }
+}
+
+```
+
+- 코드를 보면 **"copy_to": "search_tags" 를 tags 하위 필드에서 볼 수 있는데 즉 여러 필드의 값을 search_tags 라는 하나의 필드로 복사해서 그 필드 하나만을 검색하도록 만드는 것이다.**
+
+- 따라서 아래와 같은 요청을 날릴 수 있다.
+
+```jsx
+GET blogs_fixed2/_search
+{
+  "query": {
+    "match": {
+      "search_tags": "logstash"
+    }
+  }
+}
+```
+
+- 즉 모든 tag.~ 필드를 한 번에 검색하는 효과이다.
+
+1. Run the following aggregation on the `search_tags` field:
+
+```jsx
+GET blogs_fixed2/_search
+{
+  "size": 0,
+  "aggs": {
+    "top_job_titles": {
+      "terms": {
+        "field": "search_tags",
+        "size": 10
+      }
+    }
+  }
+}
+```
+
+- The `search_tags` field does not have doc values enabled. As a result, you cannot aggregate on that field. ⇒ error
+    - copy to로 생성한 값은 통계를 진행할 수 없다.
+
+1. Run the following aggregation on the `authors.uid` field:
+
+```jsx
+GET blogs_fixed2/_search
+{
+  "size": 0,
+  "aggs": {
+    "top_author_uids": {
+      "terms": {
+        "field": "authors.uid",
+        "size": 10
+      }
+    }
+  }
+}
+```
+
+⇒ 결과 없음 ⇒ 
+
+- The `authors.uid` field has been disabled. From a query and aggregation perspective, it's as if that field does not exist.
+- "enabled": false ⇒ 맵핑 진행 시 해당 값을 주게되면 검색이나 집계에서는 그 필드가 없는 것처럼 동작한다.
+
+```jsx
+"authors": {
+  "properties": {
+    "uid": {
+      "type": "keyword",
+      ***"enabled": false***
+    }
+  }
+}
+```
+
+### 3.1 Searching with the QueryDSL

@@ -1,0 +1,16 @@
+# Sample Logstash configuration for creating a simple
+# Beats -> Logstash -> Elasticsearch pipeline.
+
+input {
+  stdin {}
+}
+
+output {
+  elasticsearch {
+    hosts => ["https://localhost:9200", "https://localhost:9204"]
+    index => "test-logstash"
+    user => "admin"
+    password => "123456"
+    cacert => "/Users/imsol/nospoon/elastic/cluster1/elasticsearch-8.1.3/config/certs/http_ca.crt"
+  }
+}

@@ -1,0 +1,27 @@
+- pipeline.id: mypipe1
+  path.config: "/Users/imsol/nospoon/logstash/logstash-8.1.3/config/mypipe1.conf"
+
+- pipeline.id: mypipe2
+  path.config: "/Users/imsol/nospoon/logstash/logstash-8.1.3/config/mypipe2.conf"
+
+# List of pipelines to be loaded by Logstash
+#
+# This document must be a list of dictionaries/hashes, where the keys/values are pipeline settings.
+# Default values for omitted settings are read from the `logstash.yml` file.
+# When declaring multiple pipelines, each MUST have its own `pipeline.id`.
+#
+# Example of two pipelines:
+#
+# - pipeline.id: test
+#   pipeline.workers: 1
+#   pipeline.batch.size: 1
+#   config.string: "input { generator {} } filter { sleep { time => 1 } } output { stdout { codec => dots } }"
+# - pipeline.id: another_test
+#   queue.type: persisted
+#   path.config: "/tmp/logstash/*.config"
+#
+# Available options:
+#
+#   # name of the pipeline
+#   pipeline.id: mylogs
+#

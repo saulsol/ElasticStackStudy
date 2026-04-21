@@ -38,8 +38,6 @@ output {
   }
 }
 
-
-
 ### 시작 명령어
 ### ./logstash -f /Users/imsol/nospoon/logstash/logstash-8.1.3/config/logstash-sample.conf
 

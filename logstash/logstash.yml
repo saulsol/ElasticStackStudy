@@ -1,0 +1,46 @@
+xpack.monitoring.enabled: true
+
+xpack.monitoring.elasticsearch.hosts: [
+  "https://localhost:9200",
+  "https://localhost:9204"
+]
+
+xpack.monitoring.elasticsearch.username: "admin"
+xpack.monitoring.elasticsearch.password: "123456"
+
+# Settings file in YAML
+#
+# Settings can be specified either in hierarchical form, e.g.:
+#
+#   pipeline:
+#     batch:
+#       size: 125
+#       delay: 5
+#
+# Or as flat keys:
+#
+#   pipeline.batch.size: 125
+#   pipeline.batch.delay: 5
+#
+# ------------  Node identity ------------
+#
+# Use a descriptive name for the node:
+#
+# node.name: test
+#
+# If omitted the node name will default to the machine's host name
+#
+# ------------ Data path ------------------
+#
+# Which directory should be used by logstash and its plugins
+# for any persistent needs. Defaults to LOGSTASH_HOME/data
+#
+# path.data:
+#
+# ------------ Pipeline Settings --------------
+#
+# The ID of the pipeline.
+#
+# pipeline.id: main
+#
+# Set the number of workers that will, in parallel, execute the filters+outputs

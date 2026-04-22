@@ -1,0 +1,27 @@
+
+###################### Filebeat Configuration Example #########################
+
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /Users/imsol/nospoon/filebeat/filebeat-8.1.3-darwin-x86_64/filebeat_log_example/app_log.log
+
+# Elastic Out Put은 끄기
+output.elasticsearch:
+  enabled: false
+
+# Logstash 전송
+output.logstash:
+  hosts: ["localhost:5044"]
+
+# 모니터링
+monitoring.enabled: true
+monitoring.cluster_uuid: VuWVqY5cSGG-wH0G9OCucQ
+monitoring.elasticsearch:
+  hosts: ["https://localhost:9200"]
+  username: "elastic"
+  password: "elastic"
+  ssl.certificate_authorities:
+    - "/Users/imsol/nospoon/elastic/cluster1/elasticsearch-8.1.3/config/certs/http_ca.crt"
+# 키바나에서 모니터링 확인하기 위해 저런 식으로 설정하여 집어 넣을 수 있습니다.

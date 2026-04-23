@@ -8,7 +8,7 @@
 <img width="600" height="300" alt="image" src="https://github.com/user-attachments/assets/896cea7f-3be0-4684-af34-f2ac288d5ce1" />
 
 질문 2) 지난 20년간 할리우드 영화 중 평점 높은 영화는 수익이 났을까? 예산은 얼마나 사용했을까?
-<img width="600" height="300" alt="image" src="https://github.com/user-attachments/assets/eff46776-db58-46df-819b-84a5ec0f76be" />
+<img width="600" height="300" alt="image" src="https://github.com/user-attachments/assets/5aa2c282-39a3-4e8d-84e3-eade4390148e" />
 
 
 

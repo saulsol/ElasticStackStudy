@@ -1,0 +1,63 @@
+input {
+  file {
+    path => "/Users/imsol/nospoon/logstash/logstash-8.1.3/logs/tmdb_5000_movies_test.csv"
+    start_position => "beginning"
+    sincedb_path => "/dev/null"
+  }
+}
+
+filter {
+
+  # 변경
+  if [message] =~ "^budget" {
+    drop { }
+  }
+
+  csv {
+    separator => ","
+    columns => [
+      "budget", "genres", "homepage", "id", "keywords", "original_language",
+      "original_title", "overview", "popularity", "production_companies", "production_countries",
+      "_release_date", "revenue", "runtime", "spoken_languages", "status", "tagline", "title",
+      "vote_average", "vote_count"
+    ]
+    remove_field => [
+      "message", "production_companies", "production_countries", "keywords", "spoken_languages",
+      "@timestamp", "path", "@version", "host"
+    ]
+    skip_header => true
+  }
+
+  date {
+    match => ["_release_date", "YYYY-MM-dd"]
+    target => "release_date"
+    timezone => "UTC"
+    remove_field => "_release_date"
+  }
+
+  json {
+    source => "genres"
+    target => "genres"
+    skip_on_invalid_json => true   # 변경
+  }
+
+  ruby {
+      code => '
+        genres = event.get("genres")
+        if genres.is_a?(Array)
+          names = genres.map { |g| g["name"] }
+          event.set("genres", names)
+        end
+      '
+  }
+}
+
+  output {
+    elasticsearch {
+      hosts => ["https://localhost:9200"]
+      index => "tmdb_5000_movie2"
+      user => "elastic"
+      password => "elastic"
+      cacert => "/Users/imsol/nospoon/elastic/cluster1/elasticsearch-8.1.3/config/certs/http_ca.crt"
+    }
+  }

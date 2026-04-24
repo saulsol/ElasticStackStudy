@@ -10,7 +10,6 @@
 질문 2) 지난 20년간 할리우드 영화 중 평점 높은 영화는 수익이 났을까? 예산은 얼마나 사용했을까?
 <img width="600" height="300" alt="image" src="https://github.com/user-attachments/assets/5aa2c282-39a3-4e8d-84e3-eade4390148e" />
 
-### #2 로그스태시를 활용한 한글 트위터 데이터 분석
 
 
 
